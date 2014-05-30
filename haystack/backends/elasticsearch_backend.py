@@ -401,11 +401,12 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
             filters.append({"terms": {DJANGO_CT: model_choices}})
 
         for q in narrow_queries:
+            key, value = q.split(':')
             filters.append({
                 'fquery': {
                     'query': {
-                        'query_string': {
-                            'query': q
+                        'term': {
+                            key: value
                         },
                     },
                     '_cache': True,
