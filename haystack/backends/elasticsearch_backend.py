@@ -61,6 +61,11 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                         "type": "custom",
                         "tokenizer": "lowercase",
                         "filter": ["haystack_edgengram"]
+                    },
+                    "haystack_facet": {
+                        "type": "custom",
+                        "tokenizer": "keyword",
+                        "filter": ["lowercase"]
                     }
                 },
                 "tokenizer": {
@@ -408,10 +413,11 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
 
         for q in narrow_queries:
             key, value = q.split(':')
+            key = key + ".facet"
             filters.append({
                 'fquery': {
                     'query': {
-                        'term': {
+                        'match': {
                             key: value
                         },
                     },
@@ -638,6 +644,13 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                 if field_class.indexed is False or hasattr(field_class, 'facet_for'):
                     field_mapping['index'] = 'not_analyzed'
                     del field_mapping['analyzer']
+                if hasattr(field_class, 'facet_for'):
+                    field_mapping['fields'] = {
+                        'facet': {
+                            'type': "string",
+                            'analyzer': "haystack_facet",
+                        }
+                    }
 
             mapping[field_class.index_fieldname] = field_mapping
 
